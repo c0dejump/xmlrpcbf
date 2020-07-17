@@ -1,6 +1,6 @@
 # xmlrpc_bf
 
-bruteforce xmlrpc.php users
+bruteforce login with xmlrpc.php in wordpress website
 
 # TODO
 - [ ] if "wp-json/wp/v2/users" not found try other url like "?author=1"
