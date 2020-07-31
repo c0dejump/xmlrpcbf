@@ -24,7 +24,7 @@ class search_user:
         search_user_id: If /wp/v2/users is forbidden you can potentialy bypass with "users/{id}"
         """
         users_id = []
-        for user_id in range(0, 5):
+        for user_id in range(0, 100):
             url_users_id = "{}/{}".format(url_users, user_id)
             get_id = requests.get(url_users_id, verify=False)
             if get_id.status_code not in [401, 404, 403]:
