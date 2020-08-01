@@ -20,3 +20,15 @@ bruteforce login with xmlrpc.php in wordpress website
     -a USER_AGENT  Choice user-agent  
      -rs            read source   
 >
+
+# Exemples
+
+>
+
+    //Basic
+    python xmlrpc_bf.py -u https://url.com/ -w passwd.txt
+    
+    //Know user
+    python xmlrpc_bf.py -u https://url.com/ -w passwd.txt --user admin
+    
+>
