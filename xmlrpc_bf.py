@@ -35,7 +35,7 @@ class search_user:
                         users_id += slug
             else:
                 pass
-            sys.stdout.write("[i] search id: {}\r".format(user_id))
+            sys.stdout.write(" \033[34m[i] user id: {}\033[0m\r".format(user_id))
             sys.stdout.flush()
         if users_id:
             for ui in users_id:
@@ -70,6 +70,8 @@ class search_user:
                             pass
                     except:
                         pass
+            sys.stdout.write(" \033[34m[i] author id: {}\033[0m\r".format(author_id))
+            sys.stdout.flush()
         if author:
             for aut in author:
                 print("\n")
@@ -144,7 +146,7 @@ def search_users(url, wordlist, user, time_sleep, u_agent, admin_page):
             return what_user
         else:
             print("{}Nothing users found".format(LESS))
-    elif req_users.status_code == 401 or req_users.status_code == 401:
+    else:
         sui = searchUser.search_users_id(url_users)
         if sui:
             try:
@@ -161,9 +163,7 @@ def search_users(url, wordlist, user, time_sleep, u_agent, admin_page):
                     what_user = input("{}What user do you want test ?: ".format(INFO))
                 return what_user
             else:
-                print("{}Nothing users found".format(LESS)) 
-    else:
-        print("{} Not found".format(LESS))
+                print("{}Nothing users found".format(LESS))
 
 
 def bf_user(url, wordlist, user, time_sleep, u_agent, admin_page):
@@ -282,7 +282,7 @@ def main(url, url_xmlrpc, wordlist, user, time_sleep, u_agent):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", help="URL to scan [required]", dest='url')
-    parser.add_argument("-w", help="Wordlist used for URL Fuzzing [required]", dest='wordlist')
+    parser.add_argument("-w", help="Wordlist used for URL Fuzzing [required]", dest='wordlist', default="passwd.txt")
     parser.add_argument("-s", help="timesleep if it's must fast", default=0, dest='time_sleep')
     parser.add_argument("--user", help="if you know the user", required=False, dest='user')
     parser.add_argument("-a", help="Choice user-agent", dest='user_agent', required=False)
@@ -304,4 +304,4 @@ if __name__ == '__main__':
     url_xmlrpc = "{}xmlrpc.php".format(url)
 
     main(url, url_xmlrpc, wordlist, user, time_sleep, u_agent)
-    
+ 
